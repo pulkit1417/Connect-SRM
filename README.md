@@ -1,70 +1,35 @@
-# Getting Started with Create React App
+# Connect SRM Website
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+The **Connect SRM** website is built to serve as the central hub for the SRM community, providing essential information and resources related to the Connect SRM app. This website is designed to introduce the app's features, provide insights into the team behind the project, and offer a direct channel for users to contact the team for support or feedback.
 
-## Available Scripts
+## Website Overview
 
-In the project directory, you can run:
+The **Connect SRM** website serves as the promotional and informational gateway for the Connect SRM app. It helps users discover the features of the app, learn about the development team, and find support.
 
-### `npm start`
+### Key Objectives:
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- Provide a user-friendly and visually appealing platform for visitors to explore the app.
+- Explain the core features of Connect SRM.
+- Facilitate communication between the app users and the development team.
+- Serve as a bridge between the Connect SRM app and the SRM community.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Pages
 
-### `npm test`
+1. **Home**  
+   The home page is a welcoming introduction to Connect SRM. It provides an overview of what the app offers and highlights the key features that make it valuable for the SRM community. The page includes clear navigation to other sections of the website, ensuring a smooth user experience.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+2. **Features**  
+   This page is dedicated to showcasing the main functionalities of the Connect SRM app. Each feature is described in detail, emphasizing how it helps users engage with the SRM community. The features include event organizing, real-time chat, resource sharing, and more. Screenshots and visuals are provided to offer a glimpse of the user interface.
 
-### `npm run build`
+3. **About**  
+   The about page introduces the team behind Connect SRM. It includes the vision and mission of the project, the motivation behind its creation, and profiles of the team members involved in the development process. This page gives users a better understanding of the people working on the app and their commitment to the SRM community.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+4. **Contact**  
+   This page offers users a direct way to reach out to the development team. Whether it's for feedback, support, or general inquiries, the contact page includes a form where users can submit their questions or comments. The page also provides links to social media or other contact methods.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Tech Stack
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+The website is developed using the following technologies:
 
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- React,
+- Tailwind CSS
