@@ -1,0 +1,83 @@
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInSmooth {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 1.2s cubic-bezier(0.39, 0.575, 0.565, 1) forwards;
+  opacity: 0;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 1.2s cubic-bezier(0.39, 0.575, 0.565, 1) forwards;
+  opacity: 0;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 1.2s cubic-bezier(0.39, 0.575, 0.565, 1) forwards;
+  opacity: 0;
+}
+
+.animate-fade-in-smooth {
+  animation: fadeInSmooth 1.8s cubic-bezier(0.39, 0.575, 0.565, 1) forwards;
+  opacity: 0;
+}
+
+.animate-fade-in-up > * {
+  animation: fadeInUp 1.2s cubic-bezier(0.39, 0.575, 0.565, 1) forwards;
+  opacity: 0;
+}
+
+.animate-fade-in-up > *:nth-child(1) { animation-delay: 0.2s; }
+.animate-fade-in-up > *:nth-child(2) { animation-delay: 0.4s; }
+.animate-fade-in-up > *:nth-child(3) { animation-delay: 0.6s; }
+.animate-fade-in-up > *:nth-child(4) { animation-delay: 0.8s; }
+
+/* Add this to ensure smooth font rendering during animations */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Optional: Add this if you want to reduce animation motion for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
