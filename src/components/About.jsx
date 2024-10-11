@@ -98,7 +98,6 @@ const AboutUs = () => {
                   <img src="logo.png" alt="Other Members" className="absolute inset-0 w-full h-full object-cover" />
                 </div>
                 <h3 className="font-semibold text-xs sm:text-sm">Other Members...</h3>
-                <p className="text-xs text-muted">The OG ones</p>
                 <div className="flex justify-center mt-1">
                   <a href="https://linktr.ee/connect_srm" target="_blank" rel="noopener noreferrer" className="text-[#12e312]">
                     <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
