@@ -87,8 +87,8 @@ const AboutUs = () => {
               <TeamMember
                 name="Aparna Singh"
                 role="Marketing Lead"
-                image=""
-                linkedin=""
+                image="as.jpg"
+                linkedin="https://www.linkedin.com/in/aparna-singh-8614b9333"
                 github="https://www.github.com/aparna12-03"
               />
 
