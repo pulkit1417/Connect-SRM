@@ -5,8 +5,9 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase.config';
 import { useNavigate } from "react-router-dom";
 import { useAuth } from '../context/AuthContext';
-import { ArrowLeft, AlertTriangle, Upload, Users } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, Upload, Users, MessageCircle, X, AlertCircle, Bell, Calendar } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+
 
 const TeamRegistrationForm = () => {
   const { eventId } = useParams();
@@ -28,6 +29,8 @@ const TeamRegistrationForm = () => {
   const [submitting, setSubmitting] = useState(false);
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
+  const [whatsappLink, setWhatsappLink] = useState('');
+  const [showWhatsappModal, setShowWhatsappModal] = useState(false);
 
   useEffect(() => {
     const fetchEventDetails = async () => {
@@ -105,6 +108,13 @@ const TeamRegistrationForm = () => {
     return !querySnapshot.empty;
   };
 
+  const checkTeamNameExists = async (teamName) => {
+    const teamsRef = collection(db, 'events', eventId, 'teams');
+    const q = query(teamsRef, where('teamName', '==', teamName));
+    const querySnapshot = await getDocs(q);
+    return !querySnapshot.empty;
+  };
+
   const validateForm = async () => {
     const requiredFields = ['teamName', 'teamLeadName', 'teamLeadEmail', 'member1Email'];
     for (let field of requiredFields) {
@@ -112,6 +122,11 @@ const TeamRegistrationForm = () => {
         showAlertMessage('Team name, team lead, and at least one member are required.', 'error');
         return false;
       }
+    }
+
+    if (await checkTeamNameExists(formData.teamName)) {
+      showAlertMessage('This team name is already taken. Please choose a different name.', 'error');
+      return false;
     }
 
     const emails = [formData.teamLeadEmail, formData.member1Email, formData.member2Email, formData.member3Email]
@@ -208,15 +223,107 @@ const TeamRegistrationForm = () => {
           }
         }
         
-        showAlertMessage('Team registered successfully!', 'success');
-        setTimeout(() => {
-          navigate("/events");
-        }, 3000);
+        if (eventDetails && eventDetails.whatsappLink) {
+          setWhatsappLink(eventDetails.whatsappLink);
+          setShowWhatsappModal(true);
+        } else {
+          showAlertMessage('Team registered successfully! Redirecting to events page...', 'success');
+          setTimeout(() => {
+            navigate("/events");
+          }, 3000);
+        }
       } catch (error) {
         showAlertMessage('Error registering team: ' + error.message, 'error');
       }
     }
     setSubmitting(false);
+  };
+
+  const handleWhatsappModalClose = () => {
+    setShowWhatsappModal(false);
+    showAlertMessage('Team registered successfully! Redirecting to events page...', 'success');
+    setTimeout(() => {
+      navigate("/events");
+    }, 3000);
+  };
+
+  const WhatsappModal = ({ whatsappLink, handleWhatsappModalClose }) => {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          transition={{ duration: 0.3 }}
+          className="bg-white rounded-lg shadow-xl p-8 m-4 max-w-md w-full"
+        >
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-2xl font-bold text-gray-800">Join Event Group</h3>
+            <button
+              onClick={handleWhatsappModalClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+              aria-label="Close modal"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+          
+          <div className="mb-6">
+            <div className="flex items-center justify-center w-16 h-16 mx-auto bg-green-100 rounded-full mb-4">
+              <MessageCircle className="h-8 w-8 text-green-600" />
+            </div>
+            <p className="text-center text-gray-600 mb-4">
+              Stay connected with your team and get real-time event updates!
+            </p>
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center text-gray-700 mb-3">
+                <div className="bg-green-100 rounded-full p-2 mr-3">
+                  <Users className="h-5 w-5 text-green-600" />
+                </div>
+                <span>Connect with participants</span>
+              </div>
+              <div className="flex items-center text-gray-700 mb-3">
+                <div className="bg-blue-100 rounded-full p-2 mr-3">
+                  <Bell className="h-5 w-5 text-blue-600" />
+                </div>
+                <span>Receive important announcements</span>
+              </div>
+              <div className="flex items-center text-gray-700">
+                <div className="bg-purple-100 rounded-full p-2 mr-3">
+                  <Calendar className="h-5 w-5 text-purple-600" />
+                </div>
+                <span>Get schedule reminders</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex flex-col gap-4">
+            <a
+              href={whatsappLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full inline-flex items-center justify-center px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors duration-300"
+              onClick={handleWhatsappModalClose}
+            >
+              <MessageCircle className="mr-2 h-5 w-5" />
+              Join WhatsApp Group
+            </a>
+            <button
+              onClick={handleWhatsappModalClose}
+              className="w-full inline-flex items-center justify-center px-6 py-3 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-300"
+            >
+              <X className="mr-2 h-5 w-5" />
+              Maybe Later
+            </button>
+          </div>
+          
+          <div className="mt-6 flex items-center justify-center text-sm text-gray-500">
+            <AlertCircle className="h-4 w-4 mr-2" />
+            <p>You can always join later from the event page</p>
+          </div>
+        </motion.div>
+      </div>
+    );
   };
 
   if (loading) {
@@ -384,6 +491,12 @@ const TeamRegistrationForm = () => {
               </div>
             </div>
           </motion.div>
+        )}
+        {showWhatsappModal && (
+          <WhatsappModal
+            whatsappLink={whatsappLink}
+            handleWhatsappModalClose={handleWhatsappModalClose}
+          />
         )}
       </AnimatePresence>
     </div>
