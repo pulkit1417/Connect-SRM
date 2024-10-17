@@ -1,27 +1,106 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { getAuth, signInWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "../firebase.config"; 
+import { db } from "../firebase.config";
+import { motion, AnimatePresence } from "framer-motion";
+import { Eye, EyeOff, AlertTriangle, CheckCircle } from "lucide-react";
+import { useAuth } from '../context/AuthContext';
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
+  const [notificationType, setNotificationType] = useState("error");
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
+
+  useEffect(() => {
+    if (location.state?.message) {
+      displayNotification(location.state.message, "error");
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
+
+  const displayNotification = (message, type) => {
+    setNotificationMessage(message);
+    setNotificationType(type);
+    setShowNotification(true);
+    setTimeout(() => setShowNotification(false), 5000);
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError(null);
-    setSuccess(null);
     setLoading(true);
 
     if (!email || !password) {
-      setError('Please fill in all fields');
+      displayNotification("Please fill in all fields", "error");
       setLoading(false);
+      return;
+    }
+
+    try {
+      const auth = getAuth();
+      const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
+
+      if (!userCredential.user.emailVerified) {
+        await auth.signOut();
+        displayNotification("Please verify your email before logging in. Check your inbox for the verification email.", "error");
+        setLoading(false);
+        return;
+      }
+
+      const userDoc = await getDoc(doc(db, "users", userCredential.user.email));
+      
+      if (!userDoc.exists()) {
+        await auth.signOut();
+        displayNotification("User account not found. Please contact support.", "error");
+        setLoading(false);
+        return;
+      }
+
+      const userData = userDoc.data();
+      
+      if (userData.disabled) {
+        await auth.signOut();
+        displayNotification("Account disabled. Please contact an admin.", "error");
+        setLoading(false);
+        return;
+      }
+
+      // Only call login function if all checks pass
+      await login(userCredential.user);
+      displayNotification("Login successful!", "success");
+      navigate("/events");
+    } catch (error) {
+      console.error("Login error:", error);
+      let errorMessage = "An error occurred during login.";
+      
+      switch (error.code) {
+        case "auth/user-not-found":
+        case "auth/wrong-password":
+          errorMessage = "Invalid email or password.";
+          break;
+        case "auth/too-many-requests":
+          errorMessage = "Too many failed attempts. Please try again later.";
+          break;
+        default:
+          errorMessage = error.message;
+      }
+      
+      displayNotification(errorMessage, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resendVerificationEmail = async () => {
+    if (!email || !password) {
+      displayNotification("Please enter your email and password", "error");
       return;
     }
 
@@ -30,140 +109,97 @@ const LoginForm = () => {
       const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
       
       if (!userCredential.user.emailVerified) {
-        await auth.signOut(); // Sign out the user if email is not verified
-        setError('Your email is not verified. Please check your inbox for the verification email.');
-        return;
+        await sendEmailVerification(userCredential.user);
+        displayNotification("Verification email sent. Please check your inbox and spam folder.", "success");
+      } else {
+        displayNotification("Your email is already verified.", "success");
       }
-
-      const userDoc = await getDoc(doc(db, 'users', email.trim()));
-      const userData = userDoc.data();
       
-      if (userData.disabled) {
-        setError("Account Disabled. Please contact an admin.");
-        await auth.signOut();
-      } else {
-        setSuccess("Login successful! Redirecting...");
-        setTimeout(() => {
-          navigate("/");
-        }, 2000);
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-      if (error.code === "auth/user-not-found" || error.code === "auth/wrong-password") {
-        setError("Invalid email or password. Please try again.");
-      } else {
-        setError(error.message);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const resendVerificationEmail = async () => {
-    if (!email) {
-      setError('Please enter your email address');
-      return;
-    }
-
-    try {
-      const auth = getAuth();
-      // We need to sign in the user again to send the verification email
-      const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
-      await sendEmailVerification(userCredential.user);
-      setSuccess("Verification email resent. Please check your inbox.");
-      // Sign out the user after sending the verification email
+      // Always sign out after sending verification email
       await auth.signOut();
     } catch (error) {
       console.error("Error resending verification email:", error);
-      setError("Failed to resend verification email. Please try again later.");
+      displayNotification(
+        "Failed to send verification email. Please check your credentials and try again.", 
+        "error"
+      );
     }
   };
+
   return (
-    <div className="flex items-center justify-center h-[34.95rem] bg-gray-100">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-md p-8">
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md bg-white rounded-lg shadow-md p-8"
+      >
         <h2 className="text-2xl font-bold text-center text-gray-800 mb-8">
           Login
         </h2>
-        {success && (
-          <div className="mb-4 p-2 bg-green-100 border border-green-400 text-green-700 rounded">
-            {success}
-          </div>
-        )}
         <form onSubmit={handleLogin} className="space-y-6">
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Email
-              </label>
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400
+                        focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              placeholder="Enter your email"
+            />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Password
+            </label>
+            <div className="mt-1 relative rounded-md shadow-sm">
               <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
-                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400
+                className="block w-full px-3 py-2 border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400
                           focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                placeholder="Enter your email"
+                placeholder="Enter your password"
               />
-            </div>
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
               >
-                Password
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400
-                            focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                  placeholder="Enter your password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    className="h-5 w-5 text-gray-400"
-                  >
-                    {showPassword ? (
-                      // Eye with slash icon (hide password)
-                      <g
-                        fill="none"
-                        fillRule="evenodd"
-                        stroke="#000"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                      >
-                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22"></path>
-                      </g>
-                    ) : (
-                      // Eye icon (show password)
-                      <g>
-                        <g>
-                          <rect width="24" height="24" opacity="0"></rect>
-                          <path d="M21.87 11.5c-.64-1.11-4.16-6.68-10.14-6.5-5.53.14-8.73 5-9.6 6.5a1 1 0 0 0 0 1c.63 1.09 4 6.5 9.89 6.5h.25c5.53-.14 8.74-5 9.6-6.5a1 1 0 0 0 0-1zM12.22 17c-4.31.1-7.12-3.59-8-5 1-1.61 3.61-4.9 7.61-5 4.29-.11 7.11 3.59 8 5-1.03 1.61-3.61 4.9-7.61 5z"></path>
-                          <path d="M12 8.5a3.5 3.5 0 1 0 3.5 3.5A3.5 3.5 0 0 0 12 8.5zm0 5a1.5 1.5 0 1 1 1.5-1.5 1.5 1.5 0 0 1-1.5 1.5z"></path>
-                        </g>
-                      </g>
-                    )}
-                  </svg>
-                </button>
-              </div>
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5 text-gray-400" />
+                ) : (
+                  <Eye className="h-5 w-5 text-gray-400" />
+                )}
+              </button>
             </div>
-            <div>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
             <button
               type="submit"
               disabled={loading}
@@ -194,28 +230,64 @@ const LoginForm = () => {
               ) : null}
               {loading ? "Logging in..." : "Login"}
             </button>
-          </div>
-          <p className="text-center">
-            Don't have an account{" "}
-            <a href="/signup" className="text-primary underline">
-              Signup
+          </motion.div>
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="text-center"
+          >
+            Don't have an account?{" "}
+            <a href="/signup" className="text-indigo-600 hover:text-indigo-500">
+              Sign up
             </a>
-          </p>
+          </motion.p>
         </form>
-        {error && (
-          <div className="mt-4 text-center text-sm text-red-600">
-            {error}
-            {error.includes("not verified") && (
-              <button
-                onClick={resendVerificationEmail}
-                className="ml-2 text-blue-600 underline focus:outline-none"
-              >
-                Resend verification email
-              </button>
-            )}
-          </div>
+      </motion.div>
+      <AnimatePresence>
+        {showNotification && (
+          <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="fixed top-4 right-4 max-w-sm z-50"
+          >
+            <div
+              className={`${
+                notificationType === "error"
+                  ? "bg-red-100 border-red-500 text-red-700"
+                  : "bg-green-100 border-green-500 text-green-700"
+              } border-l-4 p-4 rounded shadow-lg`}
+              role="alert"
+            >
+              <div className="flex">
+                <div className="py-1">
+                  {notificationType === "error" ? (
+                    <AlertTriangle className="h-6 w-6 text-red-500 mr-4" />
+                  ) : (
+                    <CheckCircle className="h-6 w-6 text-green-500 mr-4" />
+                  )}
+                </div>
+                <div>
+                  <p className="font-bold">
+                    {notificationType === "error" ? "Error" : "Success"}
+                  </p>
+                  <p>{notificationMessage}</p>
+                  {notificationType === "error" &&
+                    notificationMessage.includes("verify your email") && (
+                      <button
+                        onClick={resendVerificationEmail}
+                        className="mt-2 text-sm text-indigo-600 hover:text-indigo-500"
+                      >
+                        Resend verification email
+                      </button>
+                    )}
+                </div>
+              </div>
+            </div>
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
     </div>
   );
 };

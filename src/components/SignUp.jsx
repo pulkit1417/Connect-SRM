@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { createUserWithEmailAndPassword, sendEmailVerification, updateProfile } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, AlertCircle } from 'lucide-react';
+import { ChevronRight, AlertCircle, AlertTriangle } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { db, auth } from '../firebase.config';
 
 const RequiredAsterisk = () => (
@@ -10,7 +11,7 @@ const RequiredAsterisk = () => (
 );
 
 const FormField = ({ label, id, type, value, onChange, error, options }) => (
-  <div className="mb-6">
+  <div className="mb-6 animate-fade-in">
     <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-2">{label}<RequiredAsterisk /></label>
     {type === 'select' ? (
       <select
@@ -58,8 +59,9 @@ const SignupForm = () => {
     const [errors, setErrors] = useState({});
     const [showEmailTooltip, setShowEmailTooltip] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [success, setSuccess] = useState(null);
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
+    const [alertType, setAlertType] = useState('error');
     const navigate = useNavigate();
 
     const handleChange = (name, value) => {
@@ -83,6 +85,13 @@ const SignupForm = () => {
             ...prevErrors,
             [name]: ''
         }));
+    };
+
+    const showAlertMessage = (message, type = 'error') => {
+        setAlertMessage(message);
+        setAlertType(type);
+        setShowAlert(true);
+        setTimeout(() => setShowAlert(false), 5000);
     };
 
     const validateForm = () => {
@@ -110,8 +119,6 @@ const SignupForm = () => {
         if (!validateForm()) return;
 
         setLoading(true);
-        setError(null);
-        setSuccess(null);
 
         try {
             const lowercaseEmail = formData.email.toLowerCase();
@@ -127,17 +134,16 @@ const SignupForm = () => {
             
             await addUser(lowercaseEmail);
             
-            setSuccess('Account created successfully! A verification email has been sent to your inbox. Please verify your email before logging in.');
+            showAlertMessage('Account created successfully! A verification email has been sent to your inbox.', 'success');
             
-            // Sign out the user immediately after signup
             await auth.signOut();
             
             setTimeout(() => {
                 navigate("/login");
-            }, 5000); // Increased delay to 5 seconds to give users more time to read the message
+            }, 5000);
         } catch (error) {
             console.error("Signup error:", error);
-            setError(`An error occurred: ${error.message}`);
+            showAlertMessage(`An error occurred: ${error.message}`, 'error');
         } finally {
             setLoading(false);
         }
@@ -186,13 +192,9 @@ const SignupForm = () => {
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-100 p-6">
-            <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl p-12">
-                <h2 className="text-3xl font-bold text-center text-gray-800 mb-10">Create your account</h2>
-                {success && (
-                    <div className="mb-6 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded-lg">
-                        {success}
-                    </div>
-                )}
+            <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl p-12 animate-slide-up">
+                <h2 className="text-3xl font-bold text-center text-gray-800 mb-10 animate-fade-in">Create your account</h2>
+                
                 <form onSubmit={(e) => { e.preventDefault(); signUp(); }} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField label="Name" id="name" type="text" value={formData.name} onChange={handleChange} error={errors.name} />
@@ -222,7 +224,7 @@ const SignupForm = () => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                        className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out animate-fade-in ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
                         {loading ? (
                             <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -235,16 +237,59 @@ const SignupForm = () => {
                     </button>
                 </form>
 
-                {error && (
-                    <div className="mt-6 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded-lg">
-                        {error}
-                    </div>
-                )}
-
-                <p className="mt-8 text-center text-sm text-gray-600">
+                <p className="mt-8 text-center text-sm text-gray-600 animate-fade-in">
                     Already have an account? <a href="/login" className="font-medium text-indigo-600 hover:text-indigo-500 transition duration-150 ease-in-out">Login</a>
                 </p>
             </div>
+
+            <AnimatePresence>
+                {showAlert && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed top-4 right-4 max-w-sm z-50"
+                    >
+                        <div className={`${
+                            alertType === 'error' ? 'bg-red-100 border-red-500 text-red-700' : 'bg-green-100 border-green-500 text-green-700'
+                        } border-l-4 p-4 rounded shadow-lg`} role="alert">
+                            <div className="flex">
+                                <div className="py-1">
+                                    <AlertTriangle className={`h-6 w-6 ${
+                                        alertType === 'error' ? 'text-red-500' : 'text-green-500'
+                                    } mr-4`} />
+                                </div>
+                                <div>
+                                    <p className="font-bold">{alertType === 'error' ? 'Error' : 'Success'}</p>
+                                    <p>{alertMessage}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <style jsx>{`
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+
+                @keyframes slideUp {
+                    from { transform: translateY(20px); opacity: 0; }
+                    to { transform: translateY(0); opacity: 1; }
+                }
+
+                .animate-fade-in {
+                    animation: fadeIn 0.8s ease-out forwards;
+                    opacity: 0;
+                }
+
+                .animate-slide-up {
+                    animation: slideUp 0.8s ease-out forwards;
+                    opacity: 0;
+                }
+            `}</style>
         </div>
     );
 };

@@ -43,25 +43,36 @@ const TeamRegistrationForm = () => {
   }, [eventId]);
 
   useEffect(() => {
-    if (user) {
+    if (user && user.email) {
       const fetchUserDetails = async () => {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          setFormData(prevData => ({
-            ...prevData,
-            teamLeadName: userData.name || user.displayName || '',
-            teamLeadEmail: user.email
-          }));
-        } else {
-          setFormData(prevData => ({
-            ...prevData,
-            teamLeadName: user.displayName || '',
-            teamLeadEmail: user.email
-          }));
+        try {
+          const userDoc = await getDoc(doc(db, 'users', user.email));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            setFormData(prevData => ({
+              ...prevData,
+              teamLeadName: userData.name || user.name || '',
+              teamLeadEmail: user.email
+            }));
+          } else {
+            setFormData(prevData => ({
+              ...prevData,
+              teamLeadName: user.name || '',
+              teamLeadEmail: user.email
+            }));
+          }
+        } catch (error) {
+          console.error("Error fetching user details:", error);
+          showAlertMessage('Error fetching user details. Please try again.', 'error');
         }
       };
       fetchUserDetails();
+    } else if (user) {
+      setFormData(prevData => ({
+        ...prevData,
+        teamLeadName: user.name || '',
+        teamLeadEmail: user.email || ''
+      }));
     }
   }, [user]);
 

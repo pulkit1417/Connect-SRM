@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Navigate, useParams } from 'react-router-dom';
+import { Navigate, useParams, useLocation } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase.config';
 import { useAuth } from '../context/AuthContext';
@@ -10,6 +10,7 @@ const PrivateRoute = ({ children, requiredStatus }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [eventStatus, setEventStatus] = useState(null);
   const [userTeamId, setUserTeamId] = useState(null);
+  const location = useLocation();
 
   useEffect(() => {
     const checkEventAndTeam = async () => {
@@ -55,7 +56,7 @@ const PrivateRoute = ({ children, requiredStatus }) => {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   if (eventStatus !== requiredStatus) {

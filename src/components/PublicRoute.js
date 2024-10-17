@@ -1,12 +1,17 @@
-// src/components/PublicRoute.js
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const PublicRoute = ({ children }) => {
   const { user } = useAuth();
+  const location = useLocation();
 
-  return !user ? children : <Navigate to="/" />; // Redirect to home if logged in
+  if (user) {
+    // Redirect to the page they were trying to access before logging in
+    return <Navigate to={location.state?.from || '/'} replace />;
+  }
+
+  return children;
 };
 
 export default PublicRoute;

@@ -35,28 +35,30 @@ const Home = () => {
 
   return (
     <>
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
-        .animate-float { animation: float 3s ease-in-out infinite; }
-        
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
-        
-        .hover-scale { transition: transform 0.3s ease; }
-        .hover-scale:hover { transform: scale(1.05); }
-        
-        @keyframes iconBounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-5px); }
-        }
-        .icon-bounce { animation: iconBounce 2s infinite; }
-      `}</style>
+      <style>
+        {`
+          @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+          }
+          .animate-float { animation: float 3s ease-in-out infinite; }
+          
+          @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          .fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
+          
+          .hover-scale { transition: transform 0.3s ease; }
+          .hover-scale:hover { transform: scale(1.05); }
+          
+          @keyframes iconBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+          }
+          .icon-bounce { animation: iconBounce 2s infinite; }
+        `}
+      </style>
 
       <section className="text-gray-700 bg-white min-h-screen">
         <div className="container mx-auto px-5 py-12 md:py-24 flex flex-col md:flex-row items-center">
