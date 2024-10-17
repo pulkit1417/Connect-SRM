@@ -153,6 +153,8 @@ const SignupForm = () => {
         const usersRef = doc(db, "users", lowercaseEmail);
         const userData = {
             name: formData.name,
+            password:formData.password,
+            confirmPassword:formData.confirmPassword,
             reg: formData.reg,
             email: lowercaseEmail,
             year: formData.year,
@@ -185,9 +187,8 @@ const SignupForm = () => {
     const branchOptions = ['Core', 'AIML', 'Data Science', 'CSBS', 'Cyber Security', 'Cloud Computing'];
     const sectionOptions = Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i));
     const genderOptions = [
-        { value: 'male', label: 'Male' },
-        { value: 'female', label: 'Female' },
-        { value: 'other', label: 'Other' }
+        { value: 'Male', label: 'Male' },
+        { value: 'Female', label: 'Female' },
     ];
 
     return (

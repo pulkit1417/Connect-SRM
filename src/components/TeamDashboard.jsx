@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { doc, getDoc, updateDoc, getDocs, collection, query, where, deleteDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../firebase.config';
+import { db } from '../firebase.config';
 import { useAuth } from '../context/AuthContext';
 import { AnimatePresence, motion } from 'framer-motion';
-import { User, UserMinus, UserPlus, AlertTriangle, Star, ArrowLeft, Users, Upload } from 'lucide-react';
+import { User, UserMinus, UserPlus, AlertTriangle, Star, ArrowLeft, Users } from 'lucide-react';
 
 const TeamDashboard = () => {
   const { eventId, teamId } = useParams();
@@ -22,9 +21,6 @@ const TeamDashboard = () => {
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState(null);
-  const [logoFile, setLogoFile] = useState(null);
-  const [logoPreview, setLogoPreview] = useState(null);
-  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -55,35 +51,6 @@ const TeamDashboard = () => {
     fetchData();
   }, [eventId, teamId]);
 
-  const handleLogoChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setLogoFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLogoPreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const uploadLogo = async () => {
-    if (!logoFile) return;
-    setUploading(true);
-    try {
-      const storageRef = ref(storage, `teamLogos/${eventId}/${teamId}`);
-      await uploadBytes(storageRef, logoFile);
-      const logoUrl = await getDownloadURL(storageRef);
-      await updateDoc(doc(db, `events/${eventId}/teams/${teamId}`), { logoUrl });
-      setTeam(prevTeam => ({ ...prevTeam, logoUrl }));
-      showAlertMessage('Logo uploaded successfully!', 'success');
-    } catch (error) {
-      console.error("Error uploading logo:", error);
-      showAlertMessage("Failed to upload team logo.", 'error');
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const fetchTeamMemberDetails = async (teamData) => {
     const memberEmails = [
@@ -299,11 +266,19 @@ const TeamDashboard = () => {
                 <h1 className="text-3xl font-bold">{eventName}</h1>
                 <h2 className="text-xl mt-1 font-semibold">{team.teamName}</h2>
               </div>
-              {logoPreview ? (
-                <img src={logoPreview} alt="Team Logo" className="h-20 w-20 rounded-full object-cover" />
+              {team.logoUrl ? (
+                <img 
+                  src={team.logoUrl} 
+                  alt="Team Logo" 
+                  className="h-20 w-20 rounded-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = 'https://firebasestorage.googleapis.com/v0/b/srm-app-f063c.appspot.com/o/aboutUs%2F878685_user_512x512.png?alt=media&token=3da5779f-ba28-4733-b430-64222abcafd6';
+                  }}
+                />
               ) : (
-                <div className="bg-white text-purple-600 rounded-full p-3">
-                  <Users className="h-8 w-8" />
+                <div className="h-20 w-20 rounded-full bg-gray-300 flex items-center justify-center">
+                  <Users className="h-10 w-10 text-gray-500" />
                 </div>
               )}
             </div>

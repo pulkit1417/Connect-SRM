@@ -317,7 +317,7 @@ const EventDetails = () => {
               <Clock className="mr-4 text-blue-600" size={24} />
               <div>
                 <span className="font-semibold">Time</span>
-                <p className="text-lg">{event.formattedTime}</p>
+                <p className="text-lg">{event.time} am</p>
               </div>
             </div>
             <div className="flex items-center text-gray-700 bg-gray-100 p-4 rounded-lg">

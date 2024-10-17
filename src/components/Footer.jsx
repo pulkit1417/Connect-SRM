@@ -9,7 +9,7 @@ const Footer = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
             <div className="flex flex-col items-center md:items-start">
               <Link to="/" className="flex items-center space-x-3">
-                <img src="logo.png" alt="Connect SRM Logo" className="w-14 h-14 rounded-full" />
+                <img src="https://firebasestorage.googleapis.com/v0/b/srm-app-f063c.appspot.com/o/teamLogos%2Flogo.png?alt=media&token=1ef1528d-1cfb-4470-ab2d-6abac588051b" alt="Connect SRM Logo" className="w-14 h-14 rounded-full" />
                 <span className="text-2xl font-bold text-primary">Connect SRM</span>
               </Link>
               <p className="mt-2 text-sm text-gray-600">Connecting students, empowering futures.</p>
