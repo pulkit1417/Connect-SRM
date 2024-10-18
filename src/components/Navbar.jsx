@@ -46,10 +46,16 @@ const Navbar = () => {
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
+  
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+    setIsDropdownOpen(false);
+  };
 
   const handleLogout = async () => {
     try {
       await logout();
+      closeMenu();
       navigate('/login');
     } catch (error) {
       console.error('Error signing out: ', error);
@@ -65,7 +71,10 @@ const Navbar = () => {
   const handleEventsClick = (e) => {
     if (!user) {
       e.preventDefault();
+      closeMenu();
       navigate('/login');
+    } else {
+      closeMenu();
     }
   };
 
@@ -102,7 +111,7 @@ const Navbar = () => {
       </style>
       <div className="container mx-auto flex flex-wrap p-5 flex-col md:flex-row items-center">
         <div className="flex justify-between items-center w-full md:w-auto">
-          <Link to="/" className="flex title-font font-medium items-center text-gray-900 cursor-pointer">
+          <Link to="/" className="flex title-font font-medium items-center text-gray-900 cursor-pointer" onClick={closeMenu}>
             <img src="https://firebasestorage.googleapis.com/v0/b/srm-app-f063c.appspot.com/o/teamLogos%2Flogo.png?alt=media&token=1ef1528d-1cfb-4470-ab2d-6abac588051b" alt="logo" className="w-12 h-12 rounded-full shadow-lg" />
             <span className="ml-3 text-xl font-bold">Connect SRM</span>
           </Link>
@@ -125,9 +134,9 @@ const Navbar = () => {
           >
             <span className="relative z-10">Events</span>
           </Link>
-          <Link to="/features" className="block py-2 md:py-0 md:mr-5 hover:text-blue-500 transition-colors duration-200 font-medium text-gray-900 mobile-nav-btn">Features</Link>
-          <Link to="/about" className="block py-2 md:py-0 md:mr-5 hover:text-blue-500 transition-colors duration-200 font-medium text-gray-900 mobile-nav-btn">About Us</Link>
-          <Link to="/contact" className="block py-2 md:py-0 md:mr-5 hover:text-blue-500 transition-colors duration-200 font-medium text-gray-900 mobile-nav-btn">Contact</Link>
+          <Link to="/features" className="block py-2 md:py-0 md:mr-5 hover:text-blue-500 transition-colors duration-200 font-medium text-gray-900 mobile-nav-btn" onClick={closeMenu}>Features</Link>
+          <Link to="/about" className="block py-2 md:py-0 md:mr-5 hover:text-blue-500 transition-colors duration-200 font-medium text-gray-900 mobile-nav-btn" onClick={closeMenu}>About Us</Link>
+          <Link to="/contact" className="block py-2 md:py-0 md:mr-5 hover:text-blue-500 transition-colors duration-200 font-medium text-gray-900 mobile-nav-btn" onClick={closeMenu}>Contact</Link>
           {user ? (
             <div className="relative" ref={dropdownRef}>
               <button
@@ -142,7 +151,7 @@ const Navbar = () => {
               </button>
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg">
-                  <Link to={`/profile/${encodeURIComponent(user.email)}`} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                  <Link to={`/profile/${encodeURIComponent(user.email)}`} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" onClick={closeMenu}>
                     <Settings className="mr-2" size={18} />
                     Profile
                   </Link>
@@ -154,7 +163,7 @@ const Navbar = () => {
               )}
             </div>
           ) : (
-            <Link to="/login" className="inline-flex items-center bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 py-2 px-4 focus:outline-none hover:from-blue-600 hover:to-blue-700 rounded-full text-base mt-4 md:mt-0 transition-all duration-200 shadow-md hover:shadow-lg w-full md:w-auto mobile-nav-btn">
+            <Link to="/login" className="inline-flex items-center bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 py-2 px-4 focus:outline-none hover:from-blue-600 hover:to-blue-700 rounded-full text-base mt-4 md:mt-0 transition-all duration-200 shadow-md hover:shadow-lg w-full md:w-auto mobile-nav-btn" onClick={closeMenu}>
               <span>Login</span>
               <svg fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className="w-4 h-4 ml-2" viewBox="0 0 24 24">
                 <path d="M5 12h14M12 5l7 7-7 7"></path>
