@@ -1,27 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { addDoc, collection, serverTimestamp, Timestamp, getDoc, doc } from 'firebase/firestore';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { db } from '../firebase.config';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import {
+  addDoc,
+  collection,
+  serverTimestamp,
+  Timestamp,
+  getDoc,
+  doc,
+} from "firebase/firestore";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { db } from "../firebase.config";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 
 const AddEvents = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [userClubName, setUserClubName] = useState('');
+  const [userClubName, setUserClubName] = useState("");
   const [formData, setFormData] = useState({
-    name: '',
-    clubName: '',
-    date: '',
-    time: '',
-    location: '',
-    posterUrl: '',
-    description: '',
-    rules: [''],
-    prizes: [''],
-    lastRegistrationDate: '',
-    lastRegistrationTime: '',
+    name: "",
+    clubName: "",
+    date: "",
+    time: "",
+    location: "",
+    posterUrl: "",
+    description: "",
+    rules: [""],
+    prizes: [""],
+    lastRegistrationDate: "",
+    lastRegistrationTime: "",
+    whatsappLink: "",
   });
 
   useEffect(() => {
@@ -41,14 +49,14 @@ const AddEvents = () => {
 
   const fetchUserClubName = async (userId) => {
     try {
-      const userDoc = await getDoc(doc(db, 'users', userId));
+      const userDoc = await getDoc(doc(db, "users", userId));
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        const clubName = userData.clubName || '';
+        const clubName = userData.clubName || "";
         setUserClubName(clubName);
-        setFormData(prevState => ({
+        setFormData((prevState) => ({
           ...prevState,
-          clubName: clubName
+          clubName: clubName,
         }));
       }
     } catch (error) {
@@ -67,7 +75,7 @@ const AddEvents = () => {
   };
 
   const addArrayField = (field) => {
-    setFormData({ ...formData, [field]: [...formData[field], ''] });
+    setFormData({ ...formData, [field]: [...formData[field], ""] });
   };
 
   const removeArrayField = (index, field) => {
@@ -82,15 +90,17 @@ const AddEvents = () => {
       return;
     }
     try {
-      const lastRegistrationDateTime = new Date(`${formData.lastRegistrationDate}T${formData.lastRegistrationTime}`);
-      const docRef = await addDoc(collection(db, 'events'), {
+      const lastRegistrationDateTime = new Date(
+        `${formData.lastRegistrationDate}T${formData.lastRegistrationTime}`
+      );
+      const docRef = await addDoc(collection(db, "events"), {
         ...formData,
         createdBy: user.email,
         createdAt: serverTimestamp(),
         lastRegistrationTimestamp: Timestamp.fromDate(lastRegistrationDateTime),
       });
       alert("Event added successfully!");
-      navigate('/events');
+      navigate("/events");
     } catch (error) {
       console.error("Error adding document: ", error);
       alert("Failed to add event. Please try again.");
@@ -115,7 +125,7 @@ const AddEvents = () => {
         <h2 className="text-2xl font-bold mb-4">Authentication Required</h2>
         <p className="mb-4">You must be logged in to add an event.</p>
         <button
-          onClick={() => navigate('/login')}
+          onClick={() => navigate("/login")}
           className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors duration-300"
         >
           Log In
@@ -133,12 +143,20 @@ const AddEvents = () => {
         <ArrowLeft className="mr-2 h-5 w-5" />
         Back to Events
       </button>
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto">
-        <h3 className="text-2xl font-semibold mb-6 text-center">Add New Event</h3>
-        
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto"
+      >
+        <h3 className="text-2xl font-semibold mb-6 text-center">
+          Add New Event
+        </h3>
+
         <div className="space-y-4">
           <div>
-            <label htmlFor="name" className="block text-gray-700 font-bold mb-2">
+            <label
+              htmlFor="name"
+              className="block text-gray-700 font-bold mb-2"
+            >
               Event Name
             </label>
             <input
@@ -153,7 +171,10 @@ const AddEvents = () => {
           </div>
 
           <div>
-            <label htmlFor="clubName" className="block text-gray-700 font-bold mb-2">
+            <label
+              htmlFor="clubName"
+              className="block text-gray-700 font-bold mb-2"
+            >
               Club Name
             </label>
             <input
@@ -167,7 +188,10 @@ const AddEvents = () => {
           </div>
 
           <div>
-            <label htmlFor="date" className="block text-gray-700 font-bold mb-2">
+            <label
+              htmlFor="date"
+              className="block text-gray-700 font-bold mb-2"
+            >
               Event Date
             </label>
             <input
@@ -182,7 +206,10 @@ const AddEvents = () => {
           </div>
 
           <div>
-            <label htmlFor="time" className="block text-gray-700 font-bold mb-2">
+            <label
+              htmlFor="time"
+              className="block text-gray-700 font-bold mb-2"
+            >
               Event Time
             </label>
             <input
@@ -197,7 +224,10 @@ const AddEvents = () => {
           </div>
 
           <div>
-            <label htmlFor="location" className="block text-gray-700 font-bold mb-2">
+            <label
+              htmlFor="location"
+              className="block text-gray-700 font-bold mb-2"
+            >
               Location
             </label>
             <input
@@ -212,7 +242,10 @@ const AddEvents = () => {
           </div>
 
           <div>
-            <label htmlFor="posterUrl" className="block text-gray-700 font-bold mb-2">
+            <label
+              htmlFor="posterUrl"
+              className="block text-gray-700 font-bold mb-2"
+            >
               Poster URL
             </label>
             <input
@@ -225,9 +258,28 @@ const AddEvents = () => {
               required
             />
           </div>
-
           <div>
-            <label htmlFor="description" className="block text-gray-700 font-bold mb-2">
+            <label
+              htmlFor="whatsappLink"
+              className="block text-gray-700 font-bold mb-2"
+            >
+              WhatsApp Link
+            </label>
+            <input
+              type="url"
+              id="whatsappLink"
+              name="whatsappLink"
+              value={formData.whatsappLink}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="https://chat.whatsapp.com/..."
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="description"
+              className="block text-gray-700 font-bold mb-2"
+            >
               Description
             </label>
             <textarea
@@ -242,7 +294,10 @@ const AddEvents = () => {
           </div>
 
           <div>
-            <label htmlFor="lastRegistrationDate" className="block text-gray-700 font-bold mb-2">
+            <label
+              htmlFor="lastRegistrationDate"
+              className="block text-gray-700 font-bold mb-2"
+            >
               Last Registration Date
             </label>
             <input
@@ -257,7 +312,10 @@ const AddEvents = () => {
           </div>
 
           <div>
-            <label htmlFor="lastRegistrationTime" className="block text-gray-700 font-bold mb-2">
+            <label
+              htmlFor="lastRegistrationTime"
+              className="block text-gray-700 font-bold mb-2"
+            >
               Last Registration Time
             </label>
             <input
@@ -271,7 +329,7 @@ const AddEvents = () => {
             />
           </div>
 
-          {['rules', 'prizes'].map((field) => (
+          {["rules", "prizes"].map((field) => (
             <div key={field}>
               <label className="block text-gray-700 font-bold mb-2">
                 {field.charAt(0).toUpperCase() + field.slice(1)}
