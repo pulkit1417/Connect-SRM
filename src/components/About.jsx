@@ -76,7 +76,7 @@ const AboutUs = () => {
 
               {/* Team Member 6 */}
               <TeamMember
-                name="Azman Idrisi"
+                name="Mohd Azman"
                 role="Graphic Design Lead"
                 image="ma.jpg"
                 linkedin="https://www.linkedin.com/in/azman-idrisi"
