@@ -151,11 +151,11 @@ const Navbar = () => {
               </button>
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg">
-                  <Link to={`/profile/${encodeURIComponent(user.email)}`} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" onClick={closeMenu}>
+                  <Link to={`/profile/${encodeURIComponent(user.email)}`} className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" onClick={closeMenu}>
                     <Settings className="mr-2" size={18} />
                     Profile
                   </Link>
-                  <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                  <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
                     <LogOut className="mr-2" size={18} />
                     Logout
                   </button>

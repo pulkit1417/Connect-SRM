@@ -105,16 +105,28 @@ const TeamEventDashboard = () => {
           <span className="text-sm sm:text-base">Back to Events</span>
         </button>
 
-        <div className="bg-white rounded-lg shadow-xl overflow-hidden">
-          <div className="px-4 py-5 sm:p-6 bg-purple-600 text-white">
-            <div className="flex flex-col sm:flex-row justify-between items-center">
-              <div className="text-center sm:text-left mb-4 sm:mb-0">
-                <h1 className="text-2xl sm:text-3xl font-bold">{eventName}</h1>
-                <h2 className="mt-1 text-lg sm:text-xl">Team: {team.teamName}</h2>
+        <div className="bg-white shadow-xl rounded-lg overflow-hidden">
+          <div className="bg-purple-600 text-white p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold">{eventName}</h1>
+                <h2 className="text-xl mt-1 font-semibold">{team.teamName}</h2>
               </div>
-              <div className="bg-white text-purple-600 rounded-full p-3">
-                <Users className="h-8 w-8" />
-              </div>
+              {team.logoUrl ? (
+                <img 
+                  src={team.logoUrl} 
+                  alt="Team Logo" 
+                  className="h-20 w-20 rounded-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = 'https://firebasestorage.googleapis.com/v0/b/srm-app-f063c.appspot.com/o/aboutUs%2F878685_user_512x512.png?alt=media&token=3da5779f-ba28-4733-b430-64222abcafd6';
+                  }}
+                />
+              ) : (
+                <div className="h-20 w-20 rounded-full bg-gray-300 flex items-center justify-center">
+                  <Users className="h-10 w-10 text-gray-500" />
+                </div>
+              )}
             </div>
           </div>
 
