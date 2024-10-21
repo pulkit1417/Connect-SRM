@@ -38,6 +38,10 @@ const ClubEvents = () => {
     navigate(`/addNewEvent`);
   }
 
+  const handleAdmin = () =>{
+    navigate(`/adminDash`);
+  }
+
   const handleViewDetails = (eventId) => {
     navigate(`/event-details/${eventId}`);
   };
@@ -56,14 +60,21 @@ const ClubEvents = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h2 className="text-3xl font-bold mb-6 text-center">Upcoming College Events</h2>
-      <div className="flex justify-between mb-6">
+      <div className="flex gap-4 mb-6">
         {canAddEvent && (
-          <button
+          <>          <button
             onClick={handleAddNew}
             className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition-colors duration-300"
           >
             Add New Event
           </button>
+          <button
+          onClick={handleAdmin}
+          className="bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700 transition-colors duration-300"
+        >
+          Admin Dashboard
+        </button>
+        </>
         )}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

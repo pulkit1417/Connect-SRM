@@ -37,6 +37,9 @@ const EventDetails = () => {
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(true);
   const [userTeamId, setUserTeamId] = useState(null);
   const { user } = useAuth();
+  const [shortlistedTeams, setShortlistedTeams] = useState([]);
+  const [showAllTeams, setShowAllTeams] = useState(false);
+  const [eventCredits, setEventCredits] = useState({});
 
   useEffect(() => {
     const handleResize = () => {
@@ -126,6 +129,7 @@ const EventDetails = () => {
           id: doc.id,
           ...doc.data(),
         }));
+
         const teamsWithDetails = await Promise.all(
           teamsData.map(async (team) => {
             const teamMembers = await fetchTeamMemberDetails(team);
@@ -137,19 +141,53 @@ const EventDetails = () => {
             };
           })
         );
-        const sortedTeams = teamsWithDetails.sort(
-          (a, b) => b.totalCredits - a.totalCredits
+
+        // Fetch shortlisted teams and their ecredits
+        const shortlistedTeamsRef = collection(
+          db,
+          `events/${id}/shortlistedTeams`
         );
-        setTeams(sortedTeams);
+        const shortlistedSnapshot = await getDocs(shortlistedTeamsRef);
+
+        if (!shortlistedSnapshot.empty) {
+          const shortlistedTeamsData = shortlistedSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ecredits: doc.data().ecredits || 0,
+          }));
+
+          const shortlistedTeamsWithDetails = teamsWithDetails.filter((team) =>
+            shortlistedTeamsData.some((shortlisted) => shortlisted.id === team.id)
+          ).map((team) => ({
+            ...team,
+            ecredits: shortlistedTeamsData.find((shortlisted) => shortlisted.id === team.id)?.ecredits || 0,
+          }));
+
+          const sortedShortlistedTeams = sortTeams(shortlistedTeamsWithDetails, true);
+          setShortlistedTeams(sortedShortlistedTeams);
+        } else {
+          const sortedTeams = sortTeams(teamsWithDetails, false);
+          setShortlistedTeams(sortedTeams);
+        }
+
+        const sortedAllTeams = sortTeams(teamsWithDetails, false);
+        setTeams(sortedAllTeams);
       },
       (error) => {
         console.error("Error fetching teams:", error);
       }
     );
 
-    // Clean up the listener when the component unmounts
     return () => unsubscribe();
   }, [id, user]);
+
+  const sortTeams = (teams, useEcredits) => {
+    return teams.sort((a, b) => {
+      if (useEcredits) {
+        return b.ecredits - a.ecredits;
+      }
+      return b.totalCredits - a.totalCredits;
+    });
+  };
 
   const formatDate = (date) => {
     if (!date) return "";
@@ -330,8 +368,16 @@ const EventDetails = () => {
             <div className="flex items-center text-gray-700 bg-gray-100 p-4 rounded-lg">
               <Users className="mr-4 text-blue-600" size={24} />
               <div>
-                <span className="font-semibold">Teams Registered</span>
-                <p className="text-lg">{teams.length}</p>
+                <span className="font-semibold">
+                  {shortlistedTeams.length < teams.length
+                    ? "Shortlisted Teams"
+                    : "Teams Registered"}
+                </span>
+                <p className="text-lg">
+                  {shortlistedTeams.length < teams.length
+                    ? shortlistedTeams.length
+                    : teams.length}
+                </p>
               </div>
             </div>
           </div>
@@ -448,12 +494,12 @@ const EventDetails = () => {
             </div>
           )}
           {isRegistrationOpen && userTeamId && (
-            <div className="whatsapp">
+            <div className="mb-8">
               <a
                 href={event.whatsappLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-auto inline-flex items-center justify-center px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors duration-300"
+                className="inline-flex items-center justify-center px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors duration-300"
               >
                 <MessageCircle className="mr-2 h-5 w-5" />
                 Join WhatsApp Group
@@ -461,174 +507,187 @@ const EventDetails = () => {
             </div>
           )}
           <div className="mt-8 px-4 sm:px-6 lg:px-8">
-            <h3 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6">
-              Team Rankings
-            </h3>
-            {teams.length > 0 ? (
-  <ul className="space-y-4 sm:space-y-6">
-    {teams.map((team, index) => (
-      <li
-        key={team.id}
-        className={`${getRankingColor(index)} p-4 sm:p-6 rounded-xl shadow-xl transition-all duration-300 hover:shadow-lg`}
-      >
-        {/* Mobile View */}
-        <div className="sm:hidden">
-          <div 
-            className="flex justify-between items-center cursor-pointer"
-            onClick={() => toggleTeamExpansion(team.id)}
+  <h3 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6">
+    {shortlistedTeams.length < teams.length ? "Shortlisted Teams" : "Team Rankings"}
+  </h3>
+  {(showAllTeams ? teams : shortlistedTeams).length > 0 ? (
+    <>
+      <ul className="space-y-4 sm:space-y-6">
+        {(showAllTeams ? teams : shortlistedTeams).map((team, index) => (
+          <li
+            key={team.id}
+            className={`${getRankingColor(index)} p-4 sm:p-6 rounded-xl shadow-xl transition-all duration-300 hover:shadow-lg`}
           >
-            <div className="flex items-center space-x-3">
-              <span className="font-bold text-xl min-w-[30px] text-gray-700">
-                {`${index + 1}.`}
-              </span>
-              <span className="font-bold text-lg text-gray-800">
-                {team.teamName}
-              </span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-base font-semibold text-gray-700">
-                {team.totalCredits || 0}
-              </span>
-              {expandedTeam === team.id ? (
-                <ChevronUp size={20} className="text-gray-600" />
-              ) : (
-                <ChevronDown size={20} className="text-gray-600" />
-              )}
-            </div>
-          </div>
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{
-              height: expandedTeam === team.id ? "auto" : 0,
-              opacity: expandedTeam === team.id ? 1 : 0,
-            }}
-            transition={{ duration: 0.3 }}
-            className="mt-4 overflow-hidden"
-          >
-            {team.teamMembers && team.teamMembers.length > 0 ? (
-              <div className="space-y-3 bg-gray-50 rounded-lg p-3 mt-2">
-                {team.teamMembers.map((member, memberIndex) => (
-                  <div
-                    key={memberIndex}
-                    className="bg-white p-3 rounded-lg shadow-sm"
-                  >
-                    <p className="font-semibold text-base text-gray-800">
-                      {member.name}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {member.role === "teamLead" ? "Team Lead" : `Member ${memberIndex}`}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Credits: {member.credits}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-600 italic text-sm mt-2">
-                No team member details available.
-              </p>
-            )}
-          </motion.div>
-        </div>
-
-        {/* Desktop View */}
-        <div className="hidden sm:block">
-          <div
-            className="flex flex-row justify-between items-center cursor-pointer"
-            onClick={() => toggleTeamExpansion(team.id)}
-          >
-            <div className="flex items-center space-x-4">
-              <span className="font-bold text-2xl min-w-[40px] text-gray-700">
-                {`${index + 1}.`}
-              </span>
-              <div>
-                <span className="font-bold text-xl text-gray-800">
-                  {team.teamName}
-                </span>
-                <p className="text-md text-gray-600">
-                  Lead:{" "}
-                  {team.teamMembers && team.teamMembers.length > 0
-                    ? team.teamMembers.find(
-                        (member) => member.role === "teamLead"
-                      )?.name
-                    : "Unknown"}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center">
-              <span className="text-lg font-semibold text-gray-700">
-                Total Credits: {team.totalCredits || 0}
-              </span>
-              {expandedTeam === team.id ? (
-                <ChevronUp size={20} className="text-gray-600 ml-2" />
-              ) : (
-                <ChevronDown size={20} className="text-gray-600 ml-2" />
-              )}
-            </div>
-          </div>
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{
-              height: expandedTeam === team.id ? "auto" : 0,
-              opacity: expandedTeam === team.id ? 1 : 0,
-            }}
-            transition={{ duration: 0.3 }}
-            className="mt-6 overflow-hidden"
-          >
-            {team.teamMembers && team.teamMembers.length > 0 ? (
-              <div className="grid grid-cols-2 gap-4">
-                {team.teamMembers.map((member, memberIndex) => (
-                  <div
-                    key={memberIndex}
-                    className="bg-gray-100 p-4 rounded-lg shadow-sm"
-                  >
-                    <p className="font-semibold text-lg text-gray-800">
-                      {member.name}
-                    </p>
-                    <p className="text-md text-gray-600">
-                      Role:{" "}
-                      {member.role === "teamLead"
-                        ? "Team Lead"
-                        : `Member ${memberIndex}`}
-                    </p>
-                    <p className="text-md text-gray-600">
-                      Credits: {member.credits}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-600 italic text-base">
-                No team member details available.
-              </p>
-            )}
-          </motion.div>
-        </div>
-      </li>
-    ))}
-  </ul>
-) : (
+                  {/* Mobile View */}
+                  <div className="sm:hidden">
   <div
-    className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 sm:p-6 rounded-lg"
-    role="alert"
+    className="flex justify-between items-center cursor-pointer"
+    onClick={() => toggleTeamExpansion(team.id)}
   >
-    <p className="font-bold text-lg sm:text-xl mb-2">No teams registered</p>
-    <p className="text-base sm:text-lg">
-      There are currently no teams registered for this event.
-    </p>
+    <div className="flex items-center space-x-3">
+      <span className="font-bold text-xl min-w-[30px] text-gray-700">
+        {`${index + 1}.`}
+      </span>
+      <span className="font-bold text-lg text-gray-800">
+        {team.teamName}
+      </span>
+    </div>
+    <div className="flex items-center space-x-2">
+      <span className="text-base font-semibold text-gray-700">
+        {shortlistedTeams.length < teams.length && !showAllTeams
+          ? team.ecredits || 0
+          : team.totalCredits || 0}
+      </span>
+      {expandedTeam === team.id ? (
+        <ChevronUp size={20} className="text-gray-600" />
+      ) : (
+        <ChevronDown size={20} className="text-gray-600" />
+      )}
+    </div>
   </div>
-)}
+  <motion.div
+    initial={{ height: 0, opacity: 0 }}
+    animate={{
+      height: expandedTeam === team.id ? "auto" : 0,
+      opacity: expandedTeam === team.id ? 1 : 0,
+    }}
+    transition={{ duration: 0.3 }}
+    className="mt-4 overflow-hidden"
+  >
+    {team.teamMembers && team.teamMembers.length > 0 ? (
+      <div className="space-y-3 bg-gray-50 rounded-lg p-3 mt-2">
+        {team.teamMembers.map((member, memberIndex) => (
+          <div
+            key={memberIndex}
+            className="bg-white p-3 rounded-lg shadow-sm"
+          >
+            <p className="font-semibold text-base text-gray-800">
+              {member.name}
+            </p>
+            <p className="text-sm text-gray-600">
+              {member.role === "teamLead"
+                ? "Team Lead"
+                : `Member ${memberIndex}`}
+            </p>
+            <p className="text-sm text-gray-600">
+              Credits: {member.credits}
+            </p>
           </div>
+        ))}
+      </div>
+    ) : (
+      <p className="text-gray-600 italic text-sm mt-2">
+        No team member details available.
+      </p>
+    )}
+  </motion.div>
+</div>
+                        {/* Desktop View */}
+                        <div className="hidden sm:block">
+              <div
+                className="flex flex-row justify-between items-center cursor-pointer"
+                onClick={() => toggleTeamExpansion(team.id)}
+              >
+                <div className="flex items-center space-x-4">
+                  <span className="font-bold text-2xl min-w-[40px] text-gray-700">
+                    {`${index + 1}.`}
+                  </span>
+                  <div>
+                    <span className="font-bold text-xl text-gray-800">
+                      {team.teamName}
+                    </span>
+                    <p className="text-md text-gray-600">
+                      Lead:{" "}
+                      {team.teamMembers?.find(
+                        (member) => member.role === "teamLead"
+                      )?.name || "Unknown"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-lg font-semibold text-gray-700">
+                    {shortlistedTeams.length < teams.length && !showAllTeams
+                      ? `Event Credits: ${team.ecredits || 0}`
+                      : `Total Credits: ${team.totalCredits || 0}`}
+                  </span>
+                  {expandedTeam === team.id ? (
+                    <ChevronUp size={20} className="text-gray-600 ml-2" />
+                  ) : (
+                    <ChevronDown size={20} className="text-gray-600 ml-2" />
+                  )}
+                </div>
+              </div>
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{
+                  height: expandedTeam === team.id ? "auto" : 0,
+                  opacity: expandedTeam === team.id ? 1 : 0,
+                }}
+                transition={{ duration: 0.3 }}
+                className="mt-6 overflow-hidden"
+              >
+                {team.teamMembers && team.teamMembers.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    {team.teamMembers.map((member, memberIndex) => (
+                      <div
+                        key={memberIndex}
+                        className="bg-gray-100 p-4 rounded-lg shadow-sm"
+                      >
+                        <p className="font-semibold text-lg text-gray-800">
+                          {member.name}
+                        </p>
+                        <p className="text-md text-gray-600">
+                          Role:{" "}
+                          {member.role === "teamLead"
+                            ? "Team Lead"
+                            : `Member ${memberIndex}`}
+                        </p>
+                        <p className="text-md text-gray-600">
+                          Credits: {member.credits}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-600 italic text-base">
+                    No team member details available.
+                  </p>
+                )}
+              </motion.div>
+            </div>
+          </li>
+        ))}
+      </ul>
+      {shortlistedTeams.length < teams.length && (
+        <button
+          onClick={() => setShowAllTeams(!showAllTeams)}
+          className="mt-6 bg-blue-600 text-white py-2 px-4 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors duration-300 shadow-md"
+        >
+          {showAllTeams ? "Show Shortlisted Teams" : "Show All Teams"}
+        </button>
+      )}
+    </>
+  ) : (
+    <div
+      className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 sm:p-6 rounded-lg"
+      role="alert"
+    >
+      <p className="font-bold text-lg sm:text-xl mb-2">No teams registered</p>
+      <p className="text-base sm:text-lg">
+        There are currently no teams registered for this event.
+      </p>
+    </div>
+  )}
+</div>
+
         </div>
       </motion.div>
       {showBackToTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-8 right-8 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-colors duration-300"
-          aria-label="Back to top"
+          className="fixed bottom-8 right-8 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors duration-300"
         >
-          <ChevronUpIcon size={28} />
+          <ChevronUpIcon size={24} />
         </button>
       )}
     </div>
